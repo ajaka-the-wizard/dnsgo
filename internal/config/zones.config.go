@@ -5,7 +5,7 @@ import (
 )
 
 type Zones struct {
-	allZones map[string][]Record `mapstructure:"zones"`
+	AllZones map[string][]Record `mapstructure:"zones"`
 }
 type Record struct {
 	Name  string `mapstructure:"name"`
