@@ -1,0 +1,11 @@
+zones:
+  "example.com.":
+    - name: "example.com."
+      type: "A"
+      value: "93.184.216.31"
+      ttl: 300
+
+    - name: "www.example.com"
+      type: "A"
+      value: "93.184.216.34"
+      ttl: 300
