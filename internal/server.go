@@ -7,17 +7,17 @@ import (
 	"syscall"
 
 	"github.com/ajaka-the-wizard/dnsgo/internal/config"
+	"github.com/ajaka-the-wizard/dnsgo/internal/customs"
 	"github.com/ajaka-the-wizard/dnsgo/internal/handlers"
 	"github.com/ajaka-the-wizard/dnsgo/internal/middlewares"
 	"github.com/miekg/dns"
 )
 
 func Listen() {
-	var err error
 	env := config.LoadEnv()
 	config.LoadZones()
 	config.LoadRoots()
-
+	gigantic := customs.InitializeGigantic()
 	logger := config.InitializeLogger(env)
 	defer func() { _ = logger.Sync() }()
 	base := dns.HandlerFunc(handlers.HandleReq)
@@ -26,20 +26,19 @@ func Listen() {
 		Net:     "udp",
 		UDPSize: 4096,
 	}
-	server.Handler = middlewares.LoggerMiddleware(middlewares.LatencyCalculator(base))
+	server.Handler = middlewares.LoggerMiddleware(middlewares.LatencyCalculator(base), gigantic)
 	go func() {
 		sig := make(chan os.Signal, 1)
 		signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
 		<-sig
 		log.Println("\nShutting down DNS server...")
-		if err = server.Shutdown(); err != nil {
+		if err := server.Shutdown(); err != nil {
 			log.Printf("Error during shutdown: %v", err)
 		}
 		os.Exit(0)
 	}()
 	log.Printf("DNS server listening on %s (UDP)\n", server.Addr)
-	err = server.ListenAndServe()
-	if err != nil {
+	if err := server.ListenAndServe(); err != nil {
 		log.Printf("Server stopped: %v", err)
 	}
 }
