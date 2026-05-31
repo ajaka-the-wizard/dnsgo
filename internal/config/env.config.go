@@ -3,7 +3,8 @@ package config
 import "github.com/spf13/viper"
 
 type Env struct {
-	ADDR string `mapstructure:"ADDR"`
+	ADDR       string `mapstructure:"ADDR"`
+	PRODUCTION bool   `mapstructure:"PRODUCTION"`
 }
 
 func LoadEnv() (*Env, error) {

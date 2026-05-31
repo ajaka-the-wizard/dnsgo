@@ -14,7 +14,8 @@ func LoggerMiddleware(next dns.Handler) dns.Handler {
 			return
 		}
 		q := m.Question[0]
-		reqLogger := zap.L().With(zap.Uint64("req_id", utils.GenerateID()), zap.String("query", q.Name), zap.String("type", dns.TypeToString[q.Qtype]), zap.String("remote", w.RemoteAddr().String()), zap.String("protocol", w.RemoteAddr().Network()))
+		reqLogger := zap.L().With(zap.Uint64("req_id", utils.GenerateID()), zap.String("qname", q.Name), zap.String("qtype", dns.TypeToString[q.Qtype]), zap.String("remote", w.RemoteAddr().String()), zap.String("proto", w.RemoteAddr().Network()))
+		reqLogger.Info("Scoped logger initialized")
 		writer := &domain.ContextWriters{
 			ResponseWriter: w,
 			Logger:         reqLogger,
