@@ -13,12 +13,13 @@ import (
 )
 
 func Listen() {
-	env, err := config.LoadEnv()
-	if err != nil {
-		log.Fatalf("Failed to load env config: %v", err)
-	}
+	var err error
+	env := config.LoadEnv()
+	config.LoadZones()
+	config.LoadRoots()
+
 	logger := config.InitializeLogger(env)
-	defer logger.Sync()
+	defer func() { _ = logger.Sync() }()
 	base := dns.HandlerFunc(handlers.HandleReq)
 	server := &dns.Server{
 		Addr:    env.ADDR,

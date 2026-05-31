@@ -15,7 +15,7 @@ func InitializeLogger(env *Env) *zap.Logger {
 		logger, err = zap.NewDevelopment()
 	}
 	if err != nil {
-		log.Printf("Couldn't init logger :%v", err)
+		log.Fatalf("Couldn't init logger :%v", err)
 	}
 	zap.ReplaceGlobals(logger)
 	return logger

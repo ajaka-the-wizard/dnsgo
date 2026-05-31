@@ -1,6 +1,8 @@
 package config
 
 import (
+	"log"
+
 	"github.com/spf13/viper"
 )
 
@@ -14,19 +16,20 @@ type Record struct {
 	TTL   int    `mapstructure:"ttl"`
 }
 
-func LoadZones() (*Zones, error) {
-	viper.SetConfigName("zones")
-	viper.SetConfigType("yaml")
-	viper.AddConfigPath(".")
+func LoadZones() *Zones {
+	v := viper.NewWithOptions(viper.KeyDelimiter("::"))
+	v.SetConfigName("zones")
+	v.SetConfigType("yaml")
+	v.AddConfigPath("./configs")
 
-	if err := viper.ReadInConfig(); err != nil {
-		return nil, err
+	if err := v.ReadInConfig(); err != nil {
+		log.Fatalf("Failed to read zones : %v", err)
 	}
 
-	var cfg Zones
-	if err := viper.UnmarshalExact(&cfg); err != nil {
-		return nil, err
+	var zones Zones
+	if err := v.UnmarshalExact(&zones); err != nil {
+		log.Fatalf("Failed to map zones : %v", err)
 	}
-
-	return &cfg, nil
+	log.Println("Zones loaded successfully")
+	return &zones
 }
