@@ -13,7 +13,10 @@ import (
 )
 
 func Listen() {
-	env, _ := config.LoadEnv()
+	env, err := config.LoadEnv()
+	if err != nil {
+		log.Fatalf("Failed to load env config: %v", err)
+	}
 	base := dns.HandlerFunc(handlers.HandleReq)
 	server := &dns.Server{
 		Addr:    env.ADDR,
@@ -26,11 +29,13 @@ func Listen() {
 		signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
 		<-sig
 		log.Println("\nShutting down DNS server...")
-		server.Shutdown()
+		if err = server.Shutdown(); err != nil {
+			log.Printf("Error during shutdown: %v", err)
+		}
 		os.Exit(0)
 	}()
 	log.Printf("DNS server listening on %s (UDP)\n", server.Addr)
-	err := server.ListenAndServe()
+	err = server.ListenAndServe()
 	if err != nil {
 		log.Printf("Server stopped: %v", err)
 	}

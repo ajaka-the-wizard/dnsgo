@@ -44,6 +44,6 @@ func HandleReq(w dns.ResponseWriter, m *dns.Msg) {
 	}
 	err := w.WriteMsg(message)
 	if err != nil {
-		lw.Info("Failed to write response: %v", zap.Any("error", err))
+		lw.Error("Failed to write response", zap.Any("error", err))
 	}
 }
