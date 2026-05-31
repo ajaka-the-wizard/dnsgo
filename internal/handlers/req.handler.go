@@ -1,20 +1,20 @@
 package handlers
 
 import (
-	"fmt"
-	"log"
 	"net"
 
+	"github.com/ajaka-the-wizard/dnsgo/internal/utils"
 	"github.com/miekg/dns"
+	"go.uber.org/zap"
 )
 
-func HandleReq(w dns.ResponseWriter, r *dns.Msg) {
-	m := new(dns.Msg)
-	m.SetReply(r)
-	m.Compress = true
+func HandleReq(w dns.ResponseWriter, m *dns.Msg) {
+	lw := utils.GetLogger(w)
+	message := new(dns.Msg)
+	message.SetReply(m)
+	message.Compress = true
 
-	for _, q := range r.Question {
-		fmt.Printf("Received query: %s %s\n", q.Name, dns.TypeToString[q.Qclass])
+	for _, q := range m.Question {
 		switch q.Qtype {
 		case dns.TypeA:
 			rr := &dns.A{
@@ -26,7 +26,7 @@ func HandleReq(w dns.ResponseWriter, r *dns.Msg) {
 				},
 				A: net.ParseIP("93.184.216.34"),
 			}
-			m.Answer = append(m.Answer, rr)
+			message.Answer = append(message.Answer, rr)
 		case dns.TypeAAAA:
 			rr := &dns.AAAA{
 				Hdr: dns.RR_Header{
@@ -37,13 +37,13 @@ func HandleReq(w dns.ResponseWriter, r *dns.Msg) {
 				},
 				AAAA: net.ParseIP("2606:2800:220:1:248:189:25c8:1946"),
 			}
-			m.Answer = append(m.Answer, rr)
+			message.Answer = append(message.Answer, rr)
 		default:
-			m.SetRcode(r, dns.RcodeNameError)
+			message.SetRcode(m, dns.RcodeNameError)
 		}
 	}
-	err := w.WriteMsg(m)
+	err := w.WriteMsg(message)
 	if err != nil {
-		log.Printf("Failed to write response: %v", err)
+		lw.Info("Failed to write response: %v", zap.Any("error", err))
 	}
 }
