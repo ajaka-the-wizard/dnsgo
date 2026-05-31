@@ -16,7 +16,7 @@ func LatencyCalculator(next dns.Handler) dns.Handler {
 		start := time.Now()
 		next.ServeDNS(w, m)
 
-		latency := time.Since(start).Milliseconds()
+		latency := time.Since(start).Microseconds()
 
 		lw.With(zap.Int64("latency", latency)).Info("Query completed")
 	})

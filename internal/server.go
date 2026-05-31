@@ -17,6 +17,8 @@ func Listen() {
 	if err != nil {
 		log.Fatalf("Failed to load env config: %v", err)
 	}
+	logger := config.InitializeLogger(env)
+	defer logger.Sync()
 	base := dns.HandlerFunc(handlers.HandleReq)
 	server := &dns.Server{
 		Addr:    env.ADDR,
