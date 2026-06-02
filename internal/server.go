@@ -10,17 +10,20 @@ import (
 	"github.com/ajaka-the-wizard/dnsgo/internal/customs"
 	"github.com/ajaka-the-wizard/dnsgo/internal/handlers"
 	"github.com/ajaka-the-wizard/dnsgo/internal/middlewares"
+	"github.com/ajaka-the-wizard/dnsgo/internal/resolvers"
 	"github.com/miekg/dns"
 )
 
 func Listen() {
 	env := config.LoadEnv()
-	config.LoadZones()
-	config.LoadRoots()
+	z := config.LoadZones()
+	r := config.LoadRoots()
+
+	resolvers := resolvers.CreateResolver(z, r)
 	gigantic := customs.InitializeGigantic()
 	logger := config.InitializeLogger(env)
 	defer func() { _ = logger.Sync() }()
-	base := dns.HandlerFunc(handlers.HandleReq)
+	base := dns.HandlerFunc(handlers.ReqFactory(resolvers))
 	server := &dns.Server{
 		Addr:    env.ADDR,
 		Net:     "udp",

@@ -1,49 +1,29 @@
 package handlers
 
 import (
-	"net"
-
+	"github.com/ajaka-the-wizard/dnsgo/internal/resolvers"
 	"github.com/ajaka-the-wizard/dnsgo/internal/utils"
 	"github.com/miekg/dns"
 	"go.uber.org/zap"
 )
 
-func HandleReq(w dns.ResponseWriter, m *dns.Msg) {
-	lw := utils.GetLogger(w)
-	message := new(dns.Msg)
-	message.SetReply(m)
-	message.Compress = true
+func ReqFactory(r *resolvers.Resolvers) dns.HandlerFunc {
+	return dns.HandlerFunc(func(w dns.ResponseWriter, m *dns.Msg) {
+		lw := utils.GetLogger(w)
+		message := new(dns.Msg)
+		message.SetReply(m)
+		message.Compress = true
 
-	for _, q := range m.Question {
-		switch q.Qtype {
-		case dns.TypeA:
-			rr := &dns.A{
-				Hdr: dns.RR_Header{
-					Name:   q.Name,
-					Rrtype: dns.TypeA,
-					Class:  dns.ClassINET,
-					Ttl:    300,
-				},
-				A: net.ParseIP("93.184.216.34"),
+		for _, q := range m.Question {
+			if rm, ok := r.ResolveZones(q); ok {
+				message.Answer = append(message.Answer, rm)
+			} else {
+				message.SetRcode(m, dns.RcodeNameError)
 			}
-			message.Answer = append(message.Answer, rr)
-		case dns.TypeAAAA:
-			rr := &dns.AAAA{
-				Hdr: dns.RR_Header{
-					Name:   q.Name,
-					Rrtype: dns.TypeAAAA,
-					Class:  dns.ClassINET,
-					Ttl:    300,
-				},
-				AAAA: net.ParseIP("2606:2800:220:1:248:189:25c8:1946"),
-			}
-			message.Answer = append(message.Answer, rr)
-		default:
-			message.SetRcode(m, dns.RcodeNameError)
 		}
-	}
-	err := w.WriteMsg(message)
-	if err != nil {
-		lw.Error("Failed to write response", zap.Any("error", err))
-	}
+		err := w.WriteMsg(message)
+		if err != nil {
+			lw.Error("Failed to write response", zap.Any("error", err))
+		}
+	})
 }
